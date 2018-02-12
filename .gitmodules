@@ -1,0 +1,5 @@
+[submodule "QMqttClient"]
+	path = QMqttClient
+	url = git@github.com:ve7mjc/QMqttClient.git
+	branch = v0.1
+	
