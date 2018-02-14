@@ -3,7 +3,17 @@
 MqttAdapter::MqttAdapter(QObject *parent) : QObject(parent)
 {
 
+    mqttClient = new QMQTT::Client();
+
+    connect(mqttClient, SIGNAL(connected()),
+            this, SLOT(on_mqttConnected()));
+
+    tcpClient = new TcpClient();
+
     settings = NULL;
+
+    connect(tcpClient, SIGNAL(lineReceived(QByteArray)),
+            this, SLOT(on_tcpLineReceived(QByteArray)));
 
 }
 
@@ -11,9 +21,34 @@ MqttAdapter::MqttAdapter(QObject *parent) : QObject(parent)
 //
 void MqttAdapter::start()
 {
+
     loadSettings();
 
+    // TCP
+    tcpClient->connectToHost();
 
+    // MQTT //
+    mqttClient->setClientId(mqttClientName);
+
+    mqttClient->setWillTopic(QString("client/%1").arg(mqttClientName));
+    mqttClient->setWillMessage("{ \"connected:\" : \"false\" }");
+    mqttClient->setWillQos(QOS_2);
+    mqttClient->setWillRetain(true);
+
+    mqttClient->setHost(QHostAddress(m_mqttRemoteHost));
+    mqttClient->setPort(m_mqttRemotePort);
+
+    qDebug() << qPrintable(QString("Connecting to MQTT Broker %1:%2").arg(mqttClient->host().toString()).arg(mqttClient->port()));
+    mqttClient->connectToHost();
+
+}
+
+void MqttAdapter::mqttPublish(QString topic, QString payload)
+{
+    QMQTT::Message msg;
+    msg.setTopic(topic);
+    msg.setPayload(payload.toUtf8());
+    mqttClient->publish(msg);
 }
 
 void MqttAdapter::loadSettings(QString iniFile)
@@ -24,23 +59,49 @@ void MqttAdapter::loadSettings(QString iniFile)
 
     settings = new QSettings(settingsFile, QSettings::IniFormat, this);
     if (settings->status() != QSettings::NoError) {
-        qDebug() << "error accessing settings.cfg";
+        qDebug() << qPrintable(QString("error loading settings from %1").arg(settingsFile));
         // writeLog("error accessing settings.cfg", LOG_LEVEL_ERROR);
     } else {
 
-//        settings->beginGroup("it100");
-//        it100RemoteHost = settings->value("host", QString()).toString();
-//        it100RemotePort = settings->value("port", quint16()).toInt();
-//        it100UserCode = settings->value("user_code", QString()).toString();
-//        settings->endGroup();
+        qDebug() << qPrintable(QString("loading settings from %1").arg(settingsFile));
 
         settings->beginGroup("mqtt");
         m_mqttRemoteHost = settings->value("host", QString()).toString();
-        m_mqttRemotePort = settings->value("port", QString()).toInt();
-        mqttClientName = settings->value("client_name", QString("it100")).toString();
-        mqttTopicPrefix = settings->value("topic_prefix", QString("alarm/")).toString();
+        m_mqttRemotePort = settings->value("port", 1883).toInt();
+        mqttClientName = settings->value("client_name", QString("mqtt-adapter")).toString();
+        mqttTopicPrefix = settings->value("topic_prefix", QString("test/")).toString();
         mqttTopicPrefix = mqttTopicPrefix.append(mqttClientName);
         settings->endGroup();
 
+        if (!settings->contains("mode")) {
+            qDebug() << qPrintable("ERROR: mode not specified in config");
+        } else {
+            // TCP Client Mode
+            if (settings->value("mode").toString().contains("tcp-client")) {
+                qDebug() << qPrintable(QString("Mode: %1").arg(settings->value("mode").toString()));
+
+                settings->beginGroup("tcp-client");
+                tcpClient->setRemoteHostAddress(QHostAddress(settings->value("host", QString()).toString()));
+                tcpClient->setRemoteHostPort(settings->value("port", quint16()).toInt());
+                tcpClient->setReceiveDataTimeoutMs(settings->value("receive_timeout", 0).toInt());
+                qDebug() << qPrintable(QString("Receive data Timeout: %1 ms").arg(tcpClient->receiveDateTimeoutMs()));
+                settings->endGroup();
+            }
+        }
     }
+}
+
+void MqttAdapter::on_mqttConnected()
+{
+    qDebug() << qPrintable("Connected to MQTT broker");
+}
+
+void MqttAdapter::on_tcpLineReceived(QByteArray line)
+{
+    emit tcpLineReceived(line);
+}
+
+void MqttAdapter::on_mqttMessageReceived(QByteArray topic, QByteArray payload)
+{
+
 }

@@ -7,7 +7,8 @@
 #include <QTimer>
 #include <QSettings>
 
-#include "qmqttclient.h"
+#include "qmqtt.h"
+#include "tcpclient.h"
 
 //enum LogLevel {
 //    LOG_LEVEL_ERROR,
@@ -16,11 +17,11 @@
 //    LOG_LEVEL_DEBUG
 //};
 
-//enum QosLevel {
-//    QOS_0 = 0,
-//    QOS_1 = 1,
-//    QOS_2 = 2
-//};
+enum QosLevel {
+    QOS_0 = 0,
+    QOS_1 = 1,
+    QOS_2 = 2
+};
 
 class MqttAdapter : public QObject
 {
@@ -30,6 +31,8 @@ public:
 
     void start();
 
+    void mqttPublish(QString topic, QString payload);
+
 private:
 
     QString settingsFile;
@@ -37,10 +40,17 @@ private:
 
     QSettings *settings;
 
+    QMQTT::Client *mqttClient;
+
     QString m_mqttRemoteHost;
-    QString m_mqttRemotePort;
+    unsigned int m_mqttRemotePort;
     QString mqttClientName;
     QString mqttTopicPrefix;
+
+
+    TcpClient *tcpClient;
+
+
 
 signals:
 
@@ -48,6 +58,13 @@ signals:
     void mqttMessageReceived(QByteArray topic, QByteArray payload);
 
 public slots:
+
+    void on_mqttConnected();
+    void on_mqttMessageReceived(QByteArray topic, QByteArray payload);
+
+    void on_tcpLineReceived(QByteArray line);
+
+
 };
 
 #endif // MQTTADAPTER_H

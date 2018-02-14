@@ -1,11 +1,16 @@
 QT += core network
 
 INCLUDEPATH += $$PWD
+INCLUDEPATH += c:/Qt510/5.10.0/mingw53_32/include/qmqtt/
 
-include(QMqttClient\qmqttclient.pri)
+INCLUDEPATH += c:/Qt510/5.10.0/mingw53_32/lib
+
+LIBS += -lqmqtt
 
 HEADERS += \
-    $$PWD/mqttadapter.h
+    $$PWD/mqttadapter.h \
+    $$PWD/tcpclient.h
 
 SOURCES += \
-    $$PWD/mqttadapter.cpp
+    $$PWD/mqttadapter.cpp \
+    $$PWD/tcpclient.cpp
