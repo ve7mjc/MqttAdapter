@@ -43,6 +43,7 @@ public:
     void start();
 
     void mqttPublish(QString topic, QString payload);
+    void mqttSubscribe(const QString &topic, const quint8 qos = 0);
 
 private:
 
@@ -65,11 +66,13 @@ signals:
 
     void tcpLineReceived(QByteArray line);
     void mqttMessageReceived(QByteArray topic, QByteArray payload);
+    void mqttMessageReceived(QMQTT::Message);
+    void mqttConnected();
 
 public slots:
 
     void on_mqttConnected();
-    void on_mqttMessageReceived(QByteArray topic, QByteArray payload);
+    void on_mqttMessageReceived(QMQTT::Message);
 
     void on_tcpLineReceived(QByteArray line);
 

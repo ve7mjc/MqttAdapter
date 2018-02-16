@@ -7,6 +7,8 @@ MqttAdapter::MqttAdapter(QObject *parent) : QObject(parent)
 
     connect(mqttClient, SIGNAL(connected()),
             this, SLOT(on_mqttConnected()));
+    connect(mqttClient, SIGNAL(received(QMQTT::Message)),
+            this, SLOT(on_mqttMessageReceived(QMQTT::Message)));
 
     tcpClient = new TcpClient();
 
@@ -25,7 +27,7 @@ void MqttAdapter::start()
     loadSettings();
 
     // TCP
-    tcpClient->connectToHost();
+    // tcpClient->connectToHost();
 
     // MQTT //
     mqttClient->setClientId(mqttClientName);
@@ -39,6 +41,7 @@ void MqttAdapter::start()
     mqttClient->setPort(m_mqttRemotePort);
 
     qDebug() << qPrintable(QString("Connecting to MQTT Broker %1:%2").arg(mqttClient->host().toString()).arg(mqttClient->port()));
+
     mqttClient->connectToHost();
 
 }
@@ -49,6 +52,11 @@ void MqttAdapter::mqttPublish(QString topic, QString payload)
     msg.setTopic(topic);
     msg.setPayload(payload.toUtf8());
     mqttClient->publish(msg);
+}
+
+void MqttAdapter::mqttSubscribe(const QString &topic, const quint8 qos)
+{
+    mqttClient->subscribe(topic, qos);
 }
 
 void MqttAdapter::loadSettings(QString iniFile)
@@ -74,7 +82,7 @@ void MqttAdapter::loadSettings(QString iniFile)
         settings->endGroup();
 
         if (!settings->contains("mode")) {
-            qDebug() << qPrintable("ERROR: mode not specified in config");
+            qDebug() << qPrintable("mode not specified in config");
         } else {
             // TCP Client Mode
             if (settings->value("mode").toString().contains("tcp-client")) {
@@ -95,6 +103,8 @@ void MqttAdapter::on_mqttConnected()
 {
     qDebug() << qPrintable("Connected to MQTT broker");
 
+    emit mqttConnected();
+
     clientStatus.toJson();
 }
 
@@ -103,7 +113,8 @@ void MqttAdapter::on_tcpLineReceived(QByteArray line)
     emit tcpLineReceived(line);
 }
 
-void MqttAdapter::on_mqttMessageReceived(QByteArray topic, QByteArray payload)
+void MqttAdapter::on_mqttMessageReceived(QMQTT::Message message)
 {
-
+    emit mqttMessageReceived(message);
+    emit mqttMessageReceived(message.topic().toUtf8(),message.payload());
 }

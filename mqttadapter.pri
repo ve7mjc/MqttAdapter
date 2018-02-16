@@ -1,9 +1,10 @@
 QT += core network
 
-INCLUDEPATH += $$PWD
-INCLUDEPATH += c:/Qt510/5.10.0/mingw53_32/include/qmqtt/
+win32:INCLUDEPATH += c:/Qt510/5.10.0/mingw53_32/include/qmqtt/
+unix:INCLUDEPATH += /usr/include/arm-linux-gnueabihf/qt5/qmqtt/
 
-INCLUDEPATH += c:/Qt510/5.10.0/mingw53_32/lib
+win32:INCLUDEPATH += c:/Qt510/5.10.0/mingw53_32/lib
+unix:INCLUDEPATH += /usr/local/include/qmqtt
 
 LIBS += -lqmqtt
 
