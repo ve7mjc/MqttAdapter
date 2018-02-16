@@ -30,8 +30,8 @@ void MqttAdapter::start()
     // MQTT //
     mqttClient->setClientId(mqttClientName);
 
-    mqttClient->setWillTopic(QString("client/%1").arg(mqttClientName));
-    mqttClient->setWillMessage("{ \"connected:\" : \"false\" }");
+    mqttClient->setWillTopic(QString("client/%1/status").arg(mqttClientName));
+    mqttClient->setWillMessage("{ \"state:\" : \"disconnected\" }");
     mqttClient->setWillQos(QOS_2);
     mqttClient->setWillRetain(true);
 
@@ -94,6 +94,8 @@ void MqttAdapter::loadSettings(QString iniFile)
 void MqttAdapter::on_mqttConnected()
 {
     qDebug() << qPrintable("Connected to MQTT broker");
+
+    clientStatus.toJson();
 }
 
 void MqttAdapter::on_tcpLineReceived(QByteArray line)

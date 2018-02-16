@@ -47,7 +47,7 @@ void TcpClient::connectToHost()
 {
     if (remoteHostAddress.isNull()) return;
     if (remoteHostPort > 65535 || remoteHostPort <= 0) return;
-    connectToHost(remoteHostAddress,remoteHostPort);
+    connectToHost(remoteHostAddress, remoteHostPort);
 }
 
 void TcpClient::setRemoteHostAddress(QHostAddress address)
@@ -110,6 +110,7 @@ void TcpClient::on_tcpSocketStateChanged(QAbstractSocket::SocketState state)
         // Maintain state tracking
         _connected = false;
         communicationsGood = false;
+
         emit disconnected();
         qDebug() << qPrintable(QString("Disconnected from %1:%2").arg(remoteHostAddress.toString()).arg(QString::number(remoteHostPort)));
 
@@ -117,8 +118,8 @@ void TcpClient::on_tcpSocketStateChanged(QAbstractSocket::SocketState state)
         // who are we kidding, there is no disconnect method anyways
         if (_connectionIntent) {
             if (_connectionAttempts++<=2) {
-                qDebug() << "attempting immediate reconnect";
-                connectToHost();
+                qDebug() << qPrintable("attempting immediate reconnect");
+                // connectToHost();
             }
             else { // delay connection attempt
               QTimer::singleShot(1000, this, SLOT(on_connectRetryDelayTimeout()));

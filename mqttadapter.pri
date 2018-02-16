@@ -9,8 +9,10 @@ LIBS += -lqmqtt
 
 HEADERS += \
     $$PWD/mqttadapter.h \
-    $$PWD/tcpclient.h
+    $$PWD/tcpclient.h \
+    $$PWD/clientstatus.h
 
 SOURCES += \
     $$PWD/mqttadapter.cpp \
-    $$PWD/tcpclient.cpp
+    $$PWD/tcpclient.cpp \
+    $$PWD/clientstatus.cpp

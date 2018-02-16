@@ -10,12 +10,23 @@
 #include "qmqtt.h"
 #include "tcpclient.h"
 
+#include "clientstatus.h"
+
 //enum LogLevel {
 //    LOG_LEVEL_ERROR,
 //    LOG_LEVEL_SECURITY,
 //    LOG_LEVEL_NOTICE,
 //    LOG_LEVEL_DEBUG
 //};
+
+
+/*
+
+  Take advantage of Mqtt Client LWT Will to track client status.
+
+
+
+ */
 
 enum QosLevel {
     QOS_0 = 0,
@@ -37,19 +48,17 @@ private:
 
     QString settingsFile;
     void loadSettings(QString iniFile = QString());
-
     QSettings *settings;
 
     QMQTT::Client *mqttClient;
-
     QString m_mqttRemoteHost;
     unsigned int m_mqttRemotePort;
     QString mqttClientName;
     QString mqttTopicPrefix;
 
+    ClientStatus clientStatus;
 
     TcpClient *tcpClient;
-
 
 
 signals:
